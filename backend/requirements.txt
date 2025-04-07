@@ -1,1 +1,3 @@
-fastapi\nuvicorn\nshapely
+fastapi
+uvicorn
+shapely
