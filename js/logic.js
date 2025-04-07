@@ -86,7 +86,7 @@ const drawControl = new L.Control.Draw({
     circle: false
   }
 });
-map.addControl(drawControl);
+drawControl.addTo(map);
 
 let lastCentroid = null;
 map.on('draw:created', function (e) {
@@ -161,8 +161,8 @@ fetch('data/unidades.geojson')
 
         utHighlightLayer = L.geoJSON(feature, {
           style: {
-            color: 'red',
-            weight: 2,
+            color: 'purple',
+            weight: 1.2,
             fillOpacity: 0
           }
         }).addTo(map);
@@ -171,8 +171,6 @@ fetch('data/unidades.geojson')
         const label = L.marker([center[1], center[0]], {
           icon: L.divIcon({ className: 'ut-label', html: feature.properties.NOMBRE })
         }).addTo(labelLayer);
-
-        
 
         document.getElementById('utNombre').textContent = feature.properties.NOMBRE;
         document.getElementById('utClave').textContent = feature.properties.CVE_UT;
