@@ -7,6 +7,21 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
   <link rel="stylesheet" href="css/styles.css">
+  <style>
+    #streetviewBtn {
+      margin-top: 10px;
+      width: 100%;
+      padding: 6px;
+      background: #2d89ef;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    #streetviewBtn:hover {
+      background: #1b5fad;
+    }
+  </style>
 </head>
 <body>
   <div id="map"></div>
@@ -32,6 +47,7 @@
     <label><input type="checkbox" class="layerToggle" data-layer="inmuebles_catalogados"> Inmuebles Catalogados</label>
     <label><input type="checkbox" class="layerToggle" data-layer="mercados_publicos"> Mercados Públicos</label>
     <label><input type="checkbox" class="layerToggle" data-layer="reportes_agua_2024"> Reportes Agua 2024</label>
+    <button id="streetviewBtn" disabled>Ver Street View</button>
   </div>
 
   <div class="control-container" style="top:auto; bottom:0; max-height: 35vh; overflow:auto;">
