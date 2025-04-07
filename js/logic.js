@@ -43,14 +43,13 @@ for (let [key, path] of Object.entries(layerPaths)) {
     .then(res => res.json())
     .then(data => {
       layers[key].addData(data);
-      // No activar por defecto
     });
 }
 
 // Control de visibilidad de capas
 const checkboxes = document.querySelectorAll('.layerToggle');
 checkboxes.forEach(cb => {
-  cb.checked = false; // Desactiva por defecto
+  cb.checked = false;
   cb.addEventListener('change', e => {
     const name = e.target.dataset.layer;
     if (e.target.checked) layers[name].addTo(map);
@@ -79,19 +78,27 @@ const drawControl = new L.Control.Draw({
 });
 map.addControl(drawControl);
 
+let lastCentroid = null;
 map.on('draw:created', function (e) {
   const layer = e.layer;
+  drawnItems.clearLayers();
   drawnItems.addLayer(layer);
 
   const geojson = layer.toGeoJSON();
   const buffered = turf.buffer(geojson, 0.1, { units: 'kilometers' });
   console.log('Buffer de 100m generado:', buffered);
 
-  // Google Street View al centro del polígono dibujado
   const centroid = turf.centroid(geojson).geometry.coordinates;
-  const lat = centroid[1];
-  const lon = centroid[0];
-  window.open(`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`, '_blank');
+  lastCentroid = centroid;
+  document.getElementById('streetviewBtn').disabled = false;
+});
+
+document.getElementById('streetviewBtn').addEventListener('click', () => {
+  if (lastCentroid) {
+    const lat = lastCentroid[1];
+    const lon = lastCentroid[0];
+    window.open(`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`, '_blank');
+  }
 });
 
 // Zoom y datos al seleccionar UT
