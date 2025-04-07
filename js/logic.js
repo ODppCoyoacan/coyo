@@ -90,6 +90,28 @@ map.on('draw:created', function (e) {
 
   const centroid = turf.centroid(geojson).geometry.coordinates;
   lastCentroid = centroid;
+
+  const claveUT = document.getElementById('utClave').textContent;
+
+fetch('https://coyo.onrender.com', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    ut_clave: claveUT,
+    geojson: geojson
+  })
+})
+.then(res => res.json())
+.then(data => {
+  document.getElementById('ia-orientacion').textContent = data.orientacion;
+  document.getElementById('ia-impacto').textContent = data.impacto;
+  document.getElementById('ia-viabilidad').textContent = data.viabilidad;
+  document.getElementById('ia-zonas').textContent = data.zonas_especiales;
+})
+.catch(error => {
+  console.error('Error al obtener dictamen IA:', error);
+});
+
   document.getElementById('streetviewBtn').disabled = false;
 });
 
