@@ -4,17 +4,32 @@ const map = L.map('map').setView([19.33, -99.14], 12);
 // Fondos de mapa
 const basemaps = {
   osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'),
-  esri: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}') ,
+  esri: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'),
   dark: L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png')
 };
 basemaps.osm.addTo(map);
 
-// Capas temáticas
-const layers = {
-  unidad_habitacional: L.geoJSON(null).addTo(map),
-  zona_monumentos_historicos: L.geoJSON(null).addTo(map)
-  // Agrega más capas según tu estructura
+// Capas temáticas disponibles
+const layerPaths = {
+  unidad_habitacional: 'data/capas_tematicas/unidad_habitacional.geojson',
+  anp: 'data/capas_tematicas/anp.geojson',
+  areas_conservacion_patrimonial: 'data/capas_tematicas/areas_conservacion_patrimonial.geojson',
+  inmuebles_catalogados: 'data/capas_tematicas/inmuebles_catalogados.geojson',
+  mercados_publicos: 'data/capas_tematicas/mercados_publicos.geojson',
+  reportes_agua_2024: 'data/capas_tematicas/reportes_agua_2024.geojson',
+  zona_monumentos_historicos: 'data/capas_tematicas/zona_monumentos_historicos.geojson'
 };
+
+const layers = {};
+for (let [key, path] of Object.entries(layerPaths)) {
+  layers[key] = L.geoJSON(null);
+  fetch(path)
+    .then(res => res.json())
+    .then(data => {
+      layers[key].addData(data);
+      layers[key].addTo(map);
+    });
+}
 
 // Control de visibilidad de capas
 const checkboxes = document.querySelectorAll('.layerToggle');
@@ -54,7 +69,6 @@ map.on('draw:created', function (e) {
   const geojson = layer.toGeoJSON();
   const buffered = turf.buffer(geojson, 0.1, { units: 'kilometers' });
 
-  // Aquí se haría la intersección con las capas activas (en el backend o en memoria si ya están cargadas)
   console.log('Buffer de 100m generado:', buffered);
 });
 
@@ -62,5 +76,5 @@ map.on('draw:created', function (e) {
 document.getElementById('utSelect').addEventListener('change', e => {
   const clave = e.target.value;
   console.log('Seleccionaste UT:', clave);
-  // Aquí podrías usar fetch a tu archivo GeoJSON por clave para hacer zoom
+  // Aquí podrías usar fetch a unidades.geojson para hacer zoom al polígono correspondiente
 });
