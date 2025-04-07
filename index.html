@@ -13,8 +13,7 @@
   <div class="control-container">
     <label>Unidad Territorial:
       <select id="utSelect">
-        <option value="03-007">ATLANTIDA</option>
-        <option value="03-115">VILLA PANAMERICANA</option>
+        <option value="">Seleccione una UT</option>
       </select>
     </label>
     <br>
@@ -42,7 +41,12 @@
     <p><strong>Presupuesto asignado:</strong> <span id="utPresupuesto">--</span></p>
 
     <h4>Dictamen IA</h4>
-    <p id="dictamenIA">Selecciona una UT para ver el dictamen generado por IA.</p>
+    <ul id="dictamenIA">
+      <li><strong>4. Orientación del proyecto:</strong> <span id="ia-orientacion">--</span></li>
+      <li><strong>6. Impacto del proyecto:</strong> <span id="ia-impacto">--</span></li>
+      <li><strong>8. Viabilidad:</strong> <span id="ia-viabilidad">--</span></li>
+      <li><strong>11. Zonas especiales:</strong> <span id="ia-zonas">--</span></li>
+    </ul>
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
@@ -51,3 +55,4 @@
   <script src="js/logic.js"></script>
 </body>
 </html>
+
