@@ -72,9 +72,32 @@ map.on('draw:created', function (e) {
   console.log('Buffer de 100m generado:', buffered);
 });
 
-// Zoom a UT (placeholder)
-document.getElementById('utSelect').addEventListener('change', e => {
-  const clave = e.target.value;
-  console.log('Seleccionaste UT:', clave);
-  // Aquí podrías usar fetch a unidades.geojson para hacer zoom al polígono correspondiente
-});
+// Zoom y datos al seleccionar UT
+fetch('data/unidades.geojson')
+  .then(res => res.json())
+  .then(geojson => {
+    const unidadLayer = L.geoJSON(geojson, {
+      onEachFeature: function (feature, layer) {
+        layer.options.fillOpacity = 0;
+        layer.options.opacity = 0;
+      }
+    }).addTo(map);
+
+    document.getElementById('utSelect').addEventListener('change', e => {
+      const clave = e.target.value;
+      const feature = geojson.features.find(f => f.properties.CVE_UT === clave);
+
+      if (feature) {
+        const bounds = L.geoJSON(feature).getBounds();
+        map.fitBounds(bounds);
+
+        document.getElementById('utNombre').textContent = feature.properties.NOMBRE;
+        document.getElementById('utClave').textContent = feature.properties.CVE_UT;
+        document.getElementById('utPresupuesto').textContent = `$${Number(feature.properties.MONTO).toLocaleString()}`;
+
+        // Aquí podrías también ejecutar la IA y mostrar su salida
+        document.getElementById('dictamenIA').textContent = 'Dictamen generado por IA (pendiente de integración con backend)';
+      }
+    });
+  });
+
