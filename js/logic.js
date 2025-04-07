@@ -15,11 +15,21 @@ const basemaps = {
 };
 basemaps.googleSatellite.addTo(map);
 
+let alcaldiaLayer;
+let labelLayer = L.layerGroup().addTo(map);
+let unidadesGeojson;
+
 // Ajustar límites según alcaldía.geojson
 fetch('data/alcaldia.geojson')
   .then(res => res.json())
   .then(geojson => {
-    const alcaldiaLayer = L.geoJSON(geojson).addTo(map);
+    alcaldiaLayer = L.geoJSON(geojson, {
+      style: {
+        color: 'blue',
+        weight: 1,
+        fillOpacity: 0
+      }
+    }).addTo(map);
     const bounds = alcaldiaLayer.getBounds();
     map.fitBounds(bounds);
     map.setMaxBounds(bounds);
@@ -93,24 +103,24 @@ map.on('draw:created', function (e) {
 
   const claveUT = document.getElementById('utClave').textContent;
 
-fetch('https://coyo.onrender.com/dictamen', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    ut_clave: claveUT,
-    geojson: geojson
+  fetch('https://coyo.onrender.com/dictamen', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      ut_clave: claveUT,
+      geojson: geojson
+    })
   })
-})
-.then(res => res.json())
-.then(data => {
-  document.getElementById('ia-orientacion').textContent = data.orientacion;
-  document.getElementById('ia-impacto').textContent = data.impacto;
-  document.getElementById('ia-viabilidad').textContent = data.viabilidad;
-  document.getElementById('ia-zonas').textContent = data.zonas_especiales;
-})
-.catch(error => {
-  console.error('Error al obtener dictamen IA:', error);
-});
+  .then(res => res.json())
+  .then(data => {
+    document.getElementById('ia-orientacion').textContent = data.orientacion;
+    document.getElementById('ia-impacto').textContent = data.impacto;
+    document.getElementById('ia-viabilidad').textContent = data.viabilidad;
+    document.getElementById('ia-zonas').textContent = data.zonas_especiales;
+  })
+  .catch(error => {
+    console.error('Error al obtener dictamen IA:', error);
+  });
 
   document.getElementById('streetviewBtn').disabled = false;
 });
@@ -123,17 +133,13 @@ document.getElementById('streetviewBtn').addEventListener('click', () => {
   }
 });
 
+let utHighlightLayer;
+
 // Zoom y datos al seleccionar UT
 fetch('data/unidades.geojson')
   .then(res => res.json())
   .then(geojson => {
-    const unidadLayer = L.geoJSON(geojson, {
-      onEachFeature: function (feature, layer) {
-        layer.options.fillOpacity = 0;
-        layer.options.opacity = 0;
-      }
-    }).addTo(map);
-
+    unidadesGeojson = geojson;
     const utSelect = document.getElementById('utSelect');
     geojson.features.forEach(f => {
       const opt = document.createElement('option');
@@ -150,6 +156,35 @@ fetch('data/unidades.geojson')
         const bounds = L.geoJSON(feature).getBounds();
         map.fitBounds(bounds);
 
+        if (utHighlightLayer) map.removeLayer(utHighlightLayer);
+        labelLayer.clearLayers();
+
+        utHighlightLayer = L.geoJSON(feature, {
+          style: {
+            color: 'purple',
+            weight: 1.2,
+            fillOpacity: 0
+          }
+        }).addTo(map);
+
+        const center = turf.centroid(feature).geometry.coordinates;
+        const label = L.marker([center[1], center[0]], {
+          icon: L.divIcon({ className: 'ut-label', html: feature.properties.NOMBRE })
+        }).addTo(labelLayer);
+
+        // Mostrar etiquetas de otras UT vecinas (cercanas)
+        geojson.features.forEach(f => {
+          if (f.properties.CVE_UT !== clave) {
+            const otherCenter = turf.centroid(f).geometry.coordinates;
+            const distance = turf.distance(turf.centroid(feature), turf.centroid(f));
+            if (distance < 0.4) { // Menos de 400 m de distancia
+              L.marker([otherCenter[1], otherCenter[0]], {
+                icon: L.divIcon({ className: 'ut-label', html: f.properties.NOMBRE })
+              }).addTo(labelLayer);
+            }
+          }
+        });
+
         document.getElementById('utNombre').textContent = feature.properties.NOMBRE;
         document.getElementById('utClave').textContent = feature.properties.CVE_UT;
         document.getElementById('utPresupuesto').textContent = feature.properties.monto_mone || '--';
@@ -161,3 +196,4 @@ fetch('data/unidades.geojson')
       }
     });
   });
+
