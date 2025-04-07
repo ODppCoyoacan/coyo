@@ -1,13 +1,29 @@
 // Inicializa el mapa
-const map = L.map('map').setView([19.33, -99.14], 12);
+const map = L.map('map', {
+  maxBoundsViscosity: 1.0
+});
 
-// Fondos de mapa
+// Fondos de mapa (incluye Google como WMS simulada)
 const basemaps = {
   osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'),
-  esri: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'),
-  dark: L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png')
+  googleMaps: L.tileLayer('http://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+    attribution: 'Google Maps'
+  }),
+  googleSatellite: L.tileLayer('http://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+    attribution: 'Google Satellite'
+  })
 };
-basemaps.osm.addTo(map);
+basemaps.googleSatellite.addTo(map);
+
+// Ajustar límites según alcaldía.geojson
+fetch('data/alcaldia.geojson')
+  .then(res => res.json())
+  .then(geojson => {
+    const alcaldiaLayer = L.geoJSON(geojson).addTo(map);
+    const bounds = alcaldiaLayer.getBounds();
+    map.fitBounds(bounds);
+    map.setMaxBounds(bounds);
+  });
 
 // Capas temáticas disponibles
 const layerPaths = {
@@ -27,13 +43,14 @@ for (let [key, path] of Object.entries(layerPaths)) {
     .then(res => res.json())
     .then(data => {
       layers[key].addData(data);
-      layers[key].addTo(map);
+      // No activar por defecto
     });
 }
 
 // Control de visibilidad de capas
 const checkboxes = document.querySelectorAll('.layerToggle');
 checkboxes.forEach(cb => {
+  cb.checked = false; // Desactiva por defecto
   cb.addEventListener('change', e => {
     const name = e.target.dataset.layer;
     if (e.target.checked) layers[name].addTo(map);
@@ -68,8 +85,13 @@ map.on('draw:created', function (e) {
 
   const geojson = layer.toGeoJSON();
   const buffered = turf.buffer(geojson, 0.1, { units: 'kilometers' });
-
   console.log('Buffer de 100m generado:', buffered);
+
+  // Google Street View al centro del polígono dibujado
+  const centroid = turf.centroid(geojson).geometry.coordinates;
+  const lat = centroid[1];
+  const lon = centroid[0];
+  window.open(`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`, '_blank');
 });
 
 // Zoom y datos al seleccionar UT
@@ -83,7 +105,15 @@ fetch('data/unidades.geojson')
       }
     }).addTo(map);
 
-    document.getElementById('utSelect').addEventListener('change', e => {
+    const utSelect = document.getElementById('utSelect');
+    geojson.features.forEach(f => {
+      const opt = document.createElement('option');
+      opt.value = f.properties.CVE_UT;
+      opt.textContent = `${f.properties.CVE_UT} - ${f.properties.NOMBRE}`;
+      utSelect.appendChild(opt);
+    });
+
+    utSelect.addEventListener('change', e => {
       const clave = e.target.value;
       const feature = geojson.features.find(f => f.properties.CVE_UT === clave);
 
@@ -93,11 +123,12 @@ fetch('data/unidades.geojson')
 
         document.getElementById('utNombre').textContent = feature.properties.NOMBRE;
         document.getElementById('utClave').textContent = feature.properties.CVE_UT;
-        document.getElementById('utPresupuesto').textContent = `$${Number(feature.properties.MONTO).toLocaleString()}`;
+        document.getElementById('utPresupuesto').textContent = feature.properties.monto_mone || '--';
 
-        // Aquí podrías también ejecutar la IA y mostrar su salida
-        document.getElementById('dictamenIA').textContent = 'Dictamen generado por IA (pendiente de integración con backend)';
+        document.getElementById('ia-orientacion').textContent = '--';
+        document.getElementById('ia-impacto').textContent = '--';
+        document.getElementById('ia-viabilidad').textContent = '--';
+        document.getElementById('ia-zonas').textContent = '--';
       }
     });
   });
-
