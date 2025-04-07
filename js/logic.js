@@ -172,18 +172,7 @@ fetch('data/unidades.geojson')
           icon: L.divIcon({ className: 'ut-label', html: feature.properties.NOMBRE })
         }).addTo(labelLayer);
 
-        // Mostrar etiquetas de otras UT vecinas (cercanas)
-        geojson.features.forEach(f => {
-          if (f.properties.CVE_UT !== clave) {
-            const otherCenter = turf.centroid(f).geometry.coordinates;
-            const distance = turf.distance(turf.centroid(feature), turf.centroid(f));
-            if (distance < 0.4) { // Menos de 400 m de distancia
-              L.marker([otherCenter[1], otherCenter[0]], {
-                icon: L.divIcon({ className: 'ut-label', html: f.properties.NOMBRE })
-              }).addTo(labelLayer);
-            }
-          }
-        });
+        
 
         document.getElementById('utNombre').textContent = feature.properties.NOMBRE;
         document.getElementById('utClave').textContent = feature.properties.CVE_UT;
@@ -196,4 +185,5 @@ fetch('data/unidades.geojson')
       }
     });
   });
+
 
