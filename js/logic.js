@@ -35,6 +35,35 @@ fetch('data/alcaldia.geojson')
     map.setMaxBounds(bounds);
   });
 
+// Cargar propuestas y mostrarlas
+fetch('data/propuestas.csv')
+  .then(res => res.text())
+  .then(text => {
+    const lines = text.split('\n');
+    const headers = lines[0].trim().split(',');
+    const data = lines.slice(1).map(line => {
+      const values = line.trim().split(',');
+      const obj = {};
+      headers.forEach((h, i) => {
+        obj[h.trim()] = values[i] ? values[i].trim() : '';
+      });
+      return obj;
+    });
+
+    const contenedor = document.getElementById('listaPropuestas');
+    data.forEach(p => {
+      const div = document.createElement('div');
+      div.className = 'propuesta';
+      div.innerHTML = `
+        <strong>${p.Folio}</strong><br>
+        <em>${p['Nombre proyecto']}</em><br>
+        <p>${p['Descripción del proyecto']}</p>
+        <small>Continuado: ${p['Proyecto continuado']} | Tipo: ${p.tipo}</small>
+      `;
+      contenedor.appendChild(div);
+    });
+  });
+
 // Capas temáticas disponibles
 const layerPaths = {
   unidad_habitacional: 'data/capas_tematicas/unidad_habitacional.geojson',
