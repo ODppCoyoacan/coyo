@@ -161,8 +161,8 @@ fetch('data/unidades.geojson')
 
         utHighlightLayer = L.geoJSON(feature, {
           style: {
-            color: 'purple',
-            weight: 1.2,
+            color: 'red',
+            weight: 2,
             fillOpacity: 0
           }
         }).addTo(map);
