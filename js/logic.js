@@ -93,7 +93,7 @@ map.on('draw:created', function (e) {
 
   const claveUT = document.getElementById('utClave').textContent;
 
-fetch('https://coyo.onrender.com', {
+fetch('https://coyo.onrender.com/dictamen', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
