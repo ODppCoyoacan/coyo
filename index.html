@@ -3,84 +3,56 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ODpp Coyoacán</title>
-  <link rel="stylesheet" href="css/styles.css">
+  <title>Mapa Coyoacán</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.wms@1.0.0/leaflet.wms.css" />
+  <style>
+    html, body, #map {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+  </style>
 </head>
 <body>
-  <main>
-    <section id="mapa-section">
-      <div id="map" style="height: 400px;"></div>
-    </section>
+  <div id="map"></div>
 
-    <section id="ut-section">
-      <h2>Unidad Territorial</h2>
-      <label for="utSelect">Selecciona una UT:</label>
-      <select id="utSelect"></select>
-
-      <div class="ut-info">
-        <p><strong>Clave:</strong> <span id="utClave">--</span></p>
-        <p><strong>Nombre:</strong> <span id="utNombre">--</span></p>
-        <p><strong>Presupuesto:</strong> <span id="utPresupuesto">--</span></p>
-      </div>
-
-      <fieldset>
-        <legend>Capas relacionadas</legend>
-        <label><input type="checkbox" class="layerToggle" data-layer="unidad_habitacional"> Unidad Habitacional</label><br>
-        <label><input type="checkbox" class="layerToggle" data-layer="anp"> ANP</label><br>
-        <label><input type="checkbox" class="layerToggle" data-layer="areas_conservacion_patrimonial"> Áreas Patrimoniales</label><br>
-        <label><input type="checkbox" class="layerToggle" data-layer="inmuebles_catalogados"> Inmuebles Catalogados</label><br>
-        <label><input type="checkbox" class="layerToggle" data-layer="mercados_publicos"> Mercados</label><br>
-        <label><input type="checkbox" class="layerToggle" data-layer="reportes_agua_2024"> Reportes Agua 2024</label><br>
-        <label><input type="checkbox" class="layerToggle" data-layer="zona_monumentos_historicos"> Monumentos Históricos</label>
-      </fieldset>
-    </section>
-
-    <section id="proyecto-section">
-      <h2>Proyectos</h2>
-
-      <label for="modoFiltro">Filtrar por:</label>
-      <select id="modoFiltro">
-        <option value="ut">Unidad Territorial</option>
-        <option value="tipo">Tipo</option>
-      </select>
-
-      <div id="filtroProyecto"></div>
-
-      <div style="overflow-x:auto;">
-        <table id="tablaProyectos">
-          <thead>
-            <tr>
-              <th>Clave UT</th>
-              <th>Nombre UT</th>
-              <th>Folio</th>
-              <th>Nombre del Proyecto</th>
-              <th>Descripción del Proyecto</th>
-              <th>Proyecto Continuado</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </section>
-
-    <section id="dictamen-section">
-      <h2>Dictamen IA</h2>
-      <p><strong>Orientación:</strong> <span id="ia-orientacion">--</span></p>
-      <p><strong>Impacto:</strong> <span id="ia-impacto">--</span></p>
-      <p><strong>Viabilidad:</strong> <span id="ia-viabilidad">--</span></p>
-      <p><strong>Zonas Especiales:</strong> <span id="ia-zonas">--</span></p>
-      <button id="streetviewBtn" disabled>Ver en Street View</button>
-    </section>
-  </main>
-
-  <script>
-    const ENDPOINT_DICTAMEN = "https://coyo.onrender.com/dictamen";
-  </script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
-  <script src="https://unpkg.com/@turf/turf@6.5.0/turf.min.js"></script>
-  <script src="js/logic.js"></script>
+  <script src="https://unpkg.com/leaflet.wms@1.0.0/leaflet.wms.js"></script>
+  <script>
+    const map = L.map('map');
+
+    const baseLayers = {
+      "OpenStreetMap": L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+      }),
+      "Google Maps": L.tileLayer('http://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+        attribution: 'Google Maps'
+      }),
+      "Google Satellite": L.tileLayer('http://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+        attribution: 'Google Satellite'
+      }),
+      "Google Hybrid": L.tileLayer('http://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+        attribution: 'Google Hybrid'
+      })
+    };
+
+    baseLayers["Google Satellite"].addTo(map);
+    L.control.layers(baseLayers).addTo(map);
+
+    // Cargar límite alcaldía
+    fetch('data/alcaldia.geojson')
+      .then(res => res.json())
+      .then(data => {
+        const layer = L.geoJSON(data, {
+          style: {
+            color: 'blue',
+            weight: 1,
+            fillOpacity: 0
+          }
+        }).addTo(map);
+        map.fitBounds(layer.getBounds());
+      });
+  </script>
 </body>
 </html>
