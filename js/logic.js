@@ -18,6 +18,7 @@ basemaps.googleSatellite.addTo(map);
 let alcaldiaLayer;
 let labelLayer = L.layerGroup().addTo(map);
 let unidadesGeojson;
+let utPolygon;
 
 // Ajustar límites según alcaldía.geojson
 fetch('data/alcaldia.geojson')
@@ -35,35 +36,6 @@ fetch('data/alcaldia.geojson')
     map.setMaxBounds(bounds);
   });
 
-// Cargar propuestas y mostrarlas
-fetch('data/propuestas.csv')
-  .then(res => res.text())
-  .then(text => {
-    const lines = text.split('\n');
-    const headers = lines[0].trim().split(',');
-    const data = lines.slice(1).map(line => {
-      const values = line.trim().split(',');
-      const obj = {};
-      headers.forEach((h, i) => {
-        obj[h.trim()] = values[i] ? values[i].trim() : '';
-      });
-      return obj;
-    });
-
-    const contenedor = document.getElementById('listaPropuestas');
-    data.forEach(p => {
-      const div = document.createElement('div');
-      div.className = 'propuesta';
-      div.innerHTML = `
-        <strong>${p.Folio}</strong><br>
-        <em>${p['Nombre proyecto']}</em><br>
-        <p>${p['Descripción del proyecto']}</p>
-        <small>Continuado: ${p['Proyecto continuado']} | Tipo: ${p.tipo}</small>
-      `;
-      contenedor.appendChild(div);
-    });
-  });
-
 // Capas temáticas disponibles
 const layerPaths = {
   unidad_habitacional: 'data/capas_tematicas/unidad_habitacional.geojson',
@@ -76,19 +48,23 @@ const layerPaths = {
 };
 
 const layers = {};
+const layerData = {};
+
 for (let [key, path] of Object.entries(layerPaths)) {
   layers[key] = L.geoJSON(null);
   fetch(path)
     .then(res => res.json())
     .then(data => {
+      layerData[key] = data;
       layers[key].addData(data);
     });
 }
 
-// Control de visibilidad de capas
+// Control de visibilidad de capas con intersección condicionada
 const checkboxes = document.querySelectorAll('.layerToggle');
 checkboxes.forEach(cb => {
   cb.checked = false;
+  cb.disabled = true;
   cb.addEventListener('change', e => {
     const name = e.target.dataset.layer;
     if (e.target.checked) layers[name].addTo(map);
@@ -96,73 +72,22 @@ checkboxes.forEach(cb => {
   });
 });
 
+function enableIntersectingLayers(polygonFeature) {
+  checkboxes.forEach(cb => {
+    const key = cb.dataset.layer;
+    const intersect = layerData[key]?.features?.some(f => turf.booleanIntersects(polygonFeature, f));
+    cb.disabled = !intersect;
+    cb.checked = false;
+    map.removeLayer(layers[key]);
+  });
+}
+
 // Cambiar fondo de mapa
 const basemapSelect = document.getElementById('basemapSelect');
 basemapSelect.addEventListener('change', e => {
   Object.values(basemaps).forEach(layer => map.removeLayer(layer));
   basemaps[e.target.value].addTo(map);
 });
-
-// Capa de geometrías dibujadas
-const drawnItems = new L.FeatureGroup().addTo(map);
-const drawControl = new L.Control.Draw({
-  edit: { featureGroup: drawnItems },
-  draw: {
-    polygon: true,
-    polyline: true,
-    rectangle: true,
-    marker: true,
-    circle: false
-  }
-});
-drawControl.addTo(map);
-
-let lastCentroid = null;
-map.on('draw:created', function (e) {
-  const layer = e.layer;
-  drawnItems.clearLayers();
-  drawnItems.addLayer(layer);
-
-  const geojson = layer.toGeoJSON();
-  const buffered = turf.buffer(geojson, 0.1, { units: 'kilometers' });
-  console.log('Buffer de 100m generado:', buffered);
-
-  const centroid = turf.centroid(geojson).geometry.coordinates;
-  lastCentroid = centroid;
-
-  const claveUT = document.getElementById('utClave').textContent;
-
-  fetch('https://coyo.onrender.com/dictamen', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      ut_clave: claveUT,
-      geojson: geojson
-    })
-  })
-  .then(res => res.json())
-  .then(data => {
-    document.getElementById('ia-orientacion').textContent = data.orientacion;
-    document.getElementById('ia-impacto').textContent = data.impacto;
-    document.getElementById('ia-viabilidad').textContent = data.viabilidad;
-    document.getElementById('ia-zonas').textContent = data.zonas_especiales;
-  })
-  .catch(error => {
-    console.error('Error al obtener dictamen IA:', error);
-  });
-
-  document.getElementById('streetviewBtn').disabled = false;
-});
-
-document.getElementById('streetviewBtn').addEventListener('click', () => {
-  if (lastCentroid) {
-    const lat = lastCentroid[1];
-    const lon = lastCentroid[0];
-    window.open(`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`, '_blank');
-  }
-});
-
-let utHighlightLayer;
 
 // Zoom y datos al seleccionar UT
 fetch('data/unidades.geojson')
@@ -185,10 +110,10 @@ fetch('data/unidades.geojson')
         const bounds = L.geoJSON(feature).getBounds();
         map.fitBounds(bounds);
 
-        if (utHighlightLayer) map.removeLayer(utHighlightLayer);
+        if (utPolygon) map.removeLayer(utPolygon);
         labelLayer.clearLayers();
 
-        utHighlightLayer = L.geoJSON(feature, {
+        utPolygon = L.geoJSON(feature, {
           style: {
             color: 'red',
             weight: 2,
@@ -198,19 +123,17 @@ fetch('data/unidades.geojson')
 
         const center = turf.centroid(feature).geometry.coordinates;
         const label = L.marker([center[1], center[0]], {
-          icon: L.divIcon({ className: 'ut-label', html: feature.properties.NOMBRE })
+          icon: L.divIcon({ className: 'ut-label', html: `<div style="color: black; background: white; padding: 2px 6px; border-radius: 4px; border: 1px solid #000;">${feature.properties.NOMBRE}</div>` })
         }).addTo(labelLayer);
 
         document.getElementById('utNombre').textContent = feature.properties.NOMBRE;
         document.getElementById('utClave').textContent = feature.properties.CVE_UT;
         document.getElementById('utPresupuesto').textContent = feature.properties.monto_mone || '--';
 
-        document.getElementById('ia-orientacion').textContent = '--';
-        document.getElementById('ia-impacto').textContent = '--';
-        document.getElementById('ia-viabilidad').textContent = '--';
-        document.getElementById('ia-zonas').textContent = '--';
+        enableIntersectingLayers(feature);
       }
     });
   });
+
 
 
