@@ -7,15 +7,39 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.wms@1.0.0/leaflet.wms.css" />
   <style>
-    html, body, #map {
-      height: 100%;
+    html, body {
       margin: 0;
       padding: 0;
+      font-family: sans-serif;
+    }
+    #map {
+      height: 400px;
+      width: 100%;
+    }
+    #ut-section {
+      padding: 1em;
+    }
+    #ut-section h2 {
+      margin-top: 0;
+    }
+    #utSelect {
+      padding: 0.5em;
+      font-size: 1em;
+      width: 100%;
+      max-width: 400px;
     }
   </style>
 </head>
 <body>
   <div id="map"></div>
+
+  <section id="ut-section">
+    <h2>Unidad Territorial</h2>
+    <label for="utSelect">Selecciona una UT:</label><br>
+    <select id="utSelect">
+      <option value="">-- Selecciona una opción --</option>
+    </select>
+  </section>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet.wms@1.0.0/leaflet.wms.js"></script>
@@ -47,7 +71,7 @@
         const layer = L.geoJSON(data, {
           style: {
             color: 'blue',
-            weight: 1.5,
+            weight: 1,
             fillOpacity: 0
           }
         }).addTo(map);
