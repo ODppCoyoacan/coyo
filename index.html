@@ -6,6 +6,8 @@
   <title>Mapa Coyoacán</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.wms@1.0.0/leaflet.wms.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-zoomhome@0.2.1/dist/leaflet.zoomhome.css" />
   <style>
     html, body {
       margin: 0;
@@ -14,7 +16,7 @@
     }
     #map {
       height: 400px;
-      width: 100%;
+      width: 200%; /* Doble de ancho */
     }
     #ut-section {
       padding: 1em;
@@ -27,11 +29,6 @@
       font-size: 1em;
       width: 100%;
       max-width: 400px;
-    }
-    .leaflet-control-home {
-      background-color: white;
-      padding: 5px;
-      cursor: pointer;
     }
   </style>
 </head>
@@ -48,9 +45,11 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet.wms@1.0.0/leaflet.wms.js"></script>
+  <script src="https://unpkg.com/leaflet-zoomhome@0.2.1/dist/leaflet.zoomhome.min.js"></script>
   <script>
     let alcaldiaBounds;
     const map = L.map('map', {
+      zoomControl: false,
       maxBoundsViscosity: 1.0
     });
 
@@ -72,6 +71,13 @@
     baseLayers["Google Satellite"].addTo(map);
     L.control.layers(baseLayers).addTo(map);
 
+    const zoomHome = L.Control.zoomHome({
+      position: 'topleft',
+      zoomHomeIcon: 'fa fa-home',
+      zoomHomeTitle: 'Inicio'
+    });
+    zoomHome.addTo(map);
+
     // Cargar límite alcaldía
     fetch('data/alcaldia.geojson')
       .then(res => res.json())
@@ -86,19 +92,7 @@
         alcaldiaBounds = layer.getBounds();
         map.fitBounds(alcaldiaBounds);
         map.setMaxBounds(alcaldiaBounds);
-
-        // Botón home
-        const homeControl = L.Control.extend({
-          options: { position: 'topleft' },
-          onAdd: function () {
-            const btn = L.DomUtil.create('div', 'leaflet-control-home');
-            btn.title = 'Volver a la vista de Coyoacán';
-            btn.innerHTML = '🏠';
-            btn.onclick = () => map.fitBounds(alcaldiaBounds);
-            return btn;
-          }
-        });
-        map.addControl(new homeControl());
+        zoomHome.setHomeBounds(alcaldiaBounds);
       });
   </script>
 </body>
