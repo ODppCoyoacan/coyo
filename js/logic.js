@@ -135,5 +135,26 @@ fetch('data/unidades.geojson')
     });
   });
 
+const ENDPOINT_DICTAMEN = "https://coyo.onrender.com/dictamen";
+
+// Reemplazar en el fetch de dictamen IA:
+fetch(ENDPOINT_DICTAMEN, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    ut_clave: claveUT,
+    geojson: geojson
+  })
+})
+.then(res => res.json())
+.then(data => {
+  document.getElementById('ia-orientacion').textContent = data.orientacion;
+  document.getElementById('ia-impacto').textContent = data.impacto;
+  document.getElementById('ia-viabilidad').textContent = data.viabilidad;
+  document.getElementById('ia-zonas').textContent = data.zonas_especiales;
+})
+.catch(error => {
+  console.error('Error al obtener dictamen IA:', error);
+});
 
 
