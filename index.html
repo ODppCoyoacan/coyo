@@ -85,6 +85,14 @@
     baseLayers["Google Satellite"].addTo(map);
     L.control.layers(baseLayers).addTo(map);
 
+    let cdmxBounds;
+    fetch('data/cdmx.geojson')
+      .then(res => res.json())
+      .then(data => {
+        cdmxBounds = L.geoJSON(data).getBounds();
+        map.setMaxBounds(cdmxBounds);
+      });
+
     let alcaldiaBounds;
     fetch('data/alcaldia.geojson')
       .then(res => res.json())
@@ -98,7 +106,6 @@
         }).addTo(map);
         alcaldiaBounds = layer.getBounds();
         map.fitBounds(alcaldiaBounds);
-        map.setMaxBounds(alcaldiaBounds);
 
         const homeButton = L.control({ position: 'topleft' });
         homeButton.onAdd = function () {
@@ -155,3 +162,4 @@
   </script>
 </body>
 </html>
+
