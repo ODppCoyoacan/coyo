@@ -14,7 +14,7 @@
       font-family: sans-serif;
     }
     #map {
-      height: 80vh;
+      height: 150vh;
       width: 100%;
     }
     #ut-section {
@@ -35,7 +35,7 @@
       border-radius: 4px;
       padding: 5px 10px;
       cursor: pointer;
-      font-size: 18px;
+      font-size: 14px;
     }
   </style>
 </head>
@@ -50,7 +50,8 @@
     </select>
   </section>
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
     // Cargar unidades territoriales
     fetch('data/unidades.geojson')
       .then(res => res.json())
