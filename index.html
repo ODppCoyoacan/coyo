@@ -67,27 +67,33 @@
   <script>
     let map = L.map('map', { maxBoundsViscosity: 1.0 });
 
+    // Base layers
+    const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    });
+    const gmaps = L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+      attribution: 'Google Maps'
+    });
+    const gsat = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+      attribution: 'Google Satellite'
+    });
+    const ghyb = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+      attribution: 'Google Hybrid'
+    });
+
     const baseLayers = {
-      "OpenStreetMap": L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors'
-      }),
-      "Google Maps": L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
-        attribution: 'Google Maps'
-      }),
-      "Google Satellite": L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
-        attribution: 'Google Satellite'
-      }),
-      "Google Hybrid": L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
-        attribution: 'Google Hybrid'
-      })
+      "OpenStreetMap": osm,
+      "Google Maps": gmaps,
+      "Google Satellite": gsat,
+      "Google Hybrid": ghyb
     };
 
-    baseLayers["Google Satellite"].addTo(map);
-    const baseControl = L.control.layers(baseLayers).addTo(map);
+    gsat.addTo(map);
 
-    // Capas temáticas como overlays
     const overlays = {};
-    const layerPaths = {
+    const layerControl = L.control.layers(baseLayers, overlays).addTo(map);
+
+    const thematicLayers = {
       "Unidad habitacional": 'data/unidad_habitacional.geojson',
       "ANP": 'data/anp.geojson',
       "Áreas conservación patrimonial": 'data/areas_conservacion_patrimonial.geojson',
@@ -98,16 +104,18 @@
       "Vías primarias": 'data/vias_primarias.geojson'
     };
 
-    for (const [label, path] of Object.entries(layerPaths)) {
-      fetch(path)
-        .then(res => res.json())
+    for (const [label, url] of Object.entries(thematicLayers)) {
+      fetch(url)
+        .then(res => res.ok ? res.json() : Promise.reject(`Error al cargar ${label}`))
         .then(data => {
           const layer = L.geoJSON(data);
           overlays[label] = layer;
-          baseControl.addOverlay(layer, label);
-        });
+          layerControl.addOverlay(layer, label);
+        })
+        .catch(err => console.error(err));
     }
 
+    // Límite CDMX para zoom out máximo
     let cdmxBounds;
     fetch('data/cdmx.geojson')
       .then(res => res.json())
@@ -116,16 +124,13 @@
         map.setMaxBounds(cdmxBounds);
       });
 
+    // Cargar alcaldía
     let alcaldiaBounds;
     fetch('data/alcaldia.geojson')
       .then(res => res.json())
       .then(data => {
         const layer = L.geoJSON(data, {
-          style: {
-            color: 'blue',
-            weight: 1,
-            fillOpacity: 0
-          }
+          style: { color: 'blue', weight: 1, fillOpacity: 0 }
         }).addTo(map);
         alcaldiaBounds = layer.getBounds();
         map.fitBounds(alcaldiaBounds);
@@ -141,26 +146,19 @@
         homeButton.addTo(map);
       });
 
-    let utLayer = L.geoJSON(null, {
-      style: {
-        color: 'purple',
-        weight: 2,
-        fillOpacity: 0.1
-      }
-    }).addTo(map);
-
+    // UT
+    let utLayer = L.geoJSON(null, { style: { color: 'purple', weight: 2, fillOpacity: 0.1 } }).addTo(map);
     let unidadesGeojson;
     fetch('data/unidades.geojson')
       .then(res => res.json())
       .then(geojson => {
         unidadesGeojson = geojson;
         const select = document.getElementById('utSelect');
-
         geojson.features.forEach(f => {
-          const option = document.createElement('option');
-          option.value = f.properties.CVE_UT;
-          option.textContent = `${f.properties.CVE_UT} - ${f.properties.NOMBRE}`;
-          select.appendChild(option);
+          const opt = document.createElement('option');
+          opt.value = f.properties.CVE_UT;
+          opt.textContent = `${f.properties.CVE_UT} - ${f.properties.NOMBRE}`;
+          select.appendChild(opt);
         });
 
         select.addEventListener('change', () => {
@@ -177,9 +175,7 @@
         document.getElementById('zoomUtBtn').addEventListener('click', () => {
           const clave = select.value;
           const feature = geojson.features.find(f => f.properties.CVE_UT === clave);
-          if (feature) {
-            map.fitBounds(L.geoJSON(feature).getBounds());
-          }
+          if (feature) map.fitBounds(L.geoJSON(feature).getBounds());
         });
       });
   </script>
