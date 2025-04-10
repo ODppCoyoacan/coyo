@@ -106,6 +106,7 @@
           overlays[label] = layer;
           baseControl.addOverlay(layer, label);
         });
+        .catch(err => console.error(`Error cargando ${label} desde ${path}`, err));
     }
 
     let cdmxBounds;
