@@ -93,15 +93,15 @@
     const overlays = {};
     const layerControl = L.control.layers(baseLayers, overlays).addTo(map);
 
-    const thematicLayers = {
-      "Unidad habitacional": 'data/unidad_habitacional.geojson',
-      "ANP": 'data/anp.geojson',
-      "Áreas conservación patrimonial": 'data/areas_conservacion_patrimonial.geojson',
-      "Inmuebles catalogados": 'data/inmuebles_catalogados.geojson',
-      "Mercados públicos": 'data/mercados_publicos.geojson',
-      "Reportes agua 2024": 'data/reportes_agua_2024.geojson',
-      "Zona monumentos históricos": 'data/zona_monumentos_historicos.geojson',
-      "Vías primarias": 'data/vias_primarias.geojson'
+     const thematicLayers = {
+      "Unidad habitacional": 'data/capas_tematicas/unidad_habitacional.geojson',
+      "ANP": 'data/capas_tematicas/anp.geojson',
+      "Áreas conservación patrimonial": 'data/capas_tematicas/areas_conservacion_patrimonial.geojson',
+      "Inmuebles catalogados": 'data/capas_tematicas/inmuebles_catalogados.geojson',
+      "Mercados públicos": 'data/capas_tematicas/mercados_publicos.geojson',
+      "Reportes agua 2024": 'data/capas_tematicas/reportes_agua_2024.geojson',
+      "Zona monumentos históricos": 'data/capas_tematicas/zona_monumentos_historicos.geojson',
+      "Vías primarias": 'data/capas_tematicas/vias_primarias.geojson'
     };
 
     for (const [label, url] of Object.entries(thematicLayers)) {
