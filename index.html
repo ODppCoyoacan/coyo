@@ -83,7 +83,30 @@
     };
 
     baseLayers["Google Satellite"].addTo(map);
-    L.control.layers(baseLayers).addTo(map);
+    const baseControl = L.control.layers(baseLayers).addTo(map);
+
+    // Capas temáticas como overlays
+    const overlays = {};
+    const layerPaths = {
+      "Unidad habitacional": 'data/unidad_habitacional.geojson',
+      "ANP": 'data/anp.geojson',
+      "Áreas conservación patrimonial": 'data/areas_conservacion_patrimonial.geojson',
+      "Inmuebles catalogados": 'data/inmuebles_catalogados.geojson',
+      "Mercados públicos": 'data/mercados_publicos.geojson',
+      "Reportes agua 2024": 'data/reportes_agua_2024.geojson',
+      "Zona monumentos históricos": 'data/zona_monumentos_historicos.geojson',
+      "Vías primarias": 'data/vias_primarias.geojson'
+    };
+
+    for (const [label, path] of Object.entries(layerPaths)) {
+      fetch(path)
+        .then(res => res.json())
+        .then(data => {
+          const layer = L.geoJSON(data);
+          overlays[label] = layer;
+          baseControl.addOverlay(layer, label);
+        });
+    }
 
     let cdmxBounds;
     fetch('data/cdmx.geojson')
@@ -162,4 +185,3 @@
   </script>
 </body>
 </html>
-
