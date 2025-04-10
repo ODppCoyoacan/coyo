@@ -14,7 +14,7 @@
       font-family: sans-serif;
     }
     #map {
-      height: 80vh;
+      height: 150vh;
       width: 100%;
     }
     #ut-section {
@@ -57,12 +57,31 @@
       .then(res => res.json())
       .then(geojson => {
         const select = document.getElementById('utSelect');
+        const utLayer = L.geoJSON(null, {
+          style: {
+            color: 'red',
+            weight: 2,
+            fillOpacity: 0
+          }
+        }).addTo(map);
+
         geojson.features.forEach(f => {
           const option = document.createElement('option');
           option.value = f.properties.CVE_UT;
           option.textContent = `${f.properties.CVE_UT} - ${f.properties.NOMBRE}`;
           select.appendChild(option);
         });
+
+        select.addEventListener('change', () => {
+          const clave = select.value;
+          const feature = geojson.features.find(f => f.properties.CVE_UT === clave);
+          if (feature) {
+            utLayer.clearLayers();
+            utLayer.addData(feature);
+            map.fitBounds(L.geoJSON(feature).getBounds());
+          }
+        });
+      });
       });
   </script>
   <script src="https://unpkg.com/leaflet.wms@1.0.0/leaflet.wms.js"></script>
