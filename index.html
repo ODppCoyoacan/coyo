@@ -94,14 +94,12 @@
     const layerControl = L.control.layers(baseLayers, overlays).addTo(map);
 
     const thematicLayers = {
-      
       "ANP": 'data/capas_tematicas/anp.geojson',
       "Área de conservación patrimonial": 'data/capas_tematicas/areas_conservacion_patrimonial.geojson',
       "Área de valor ambiental": 'data/capas_tematicas/area_valor_ambiental.geojson',
       "Área de verde": 'data/capas_tematicas/areas_verdes.geojson',
       "Inmueble catalogado": 'data/capas_tematicas/inmuebles_catalogados.geojson',
       "Mercado público": 'data/capas_tematicas/mercados_publicos.geojson',
-      "Unidad habitacional": 'data/capas_tematicas/unidad_habitacional.geojson',
       "Vía primaria": 'data/capas_tematicas/vias_primarias.geojson',
       "Zona monumentos históricos": 'data/capas_tematicas/zona_monumentos_historicos.geojson'
     };
@@ -110,11 +108,26 @@
       fetch(url)
         .then(res => res.ok ? res.json() : Promise.reject(`Error al cargar ${label}`))
         .then(data => {
-          const layer = label === "Inmuebles catalogados"
-            ? L.geoJSON(data, {
-                pointToLayer: (feature, latlng) => L.circleMarker(latlng, { radius: 5, fillColor: 'red', color: '#000', weight: 1, fillOpacity: 0.8 })
-              })
-            : L.geoJSON(data);
+          const layer = L.geoJSON(data, {
+            pointToLayer: (feature, latlng) => {
+              if (label === "Inmueble catalogado") {
+                return L.circleMarker(latlng, { radius: 5, fillColor: 'red', color: '#000', weight: 1, fillOpacity: 0.8 });
+              }
+              return L.marker(latlng);
+            },
+            style: feature => {
+              switch (label) {
+                case "ANP": return { color: 'orange', weight: 1, fillOpacity: 0.3 };
+                case "Área de conservación patrimonial": return { color: 'maroon', weight: 1, fillOpacity: 0.3 };
+                case "Área de valor ambiental": return { color: '#004d00', weight: 1, fillOpacity: 0.3 };
+                case "Área de verde": return { color: 'lightgreen', weight: 1, fillOpacity: 0.3 };
+                case "Zona monumentos históricos": return { color: 'pink', weight: 1, fillOpacity: 0.3 };
+                case "Vía primaria": return { color: 'blue', weight: 2 };
+                case "Mercado público": return null;
+                default: return { color: '#666', weight: 1 };
+              }
+            }
+          });
           overlays[label] = layer;
           layerControl.addOverlay(layer, label);
         })
@@ -187,3 +200,4 @@
   </script>
 </body>
 </html>
+
