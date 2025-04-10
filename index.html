@@ -22,19 +22,28 @@
     #ut-section h2 {
       margin-top: 0;
     }
+    #ut-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+    }
     #utSelect {
       padding: 0.5em;
       font-size: 1em;
-      width: 100%;
-      max-width: 400px;
+      max-width: 300px;
     }
-    .leaflet-control-home-btn {
+    .leaflet-control-home-btn, .ut-zoom-btn {
       background: white;
       border: 2px solid #ccc;
       border-radius: 4px;
       padding: 5px;
       cursor: pointer;
       font-size: 12px;
+    }
+    #presupuesto {
+      margin-top: 0.5em;
+      font-weight: bold;
     }
   </style>
 </head>
@@ -43,10 +52,15 @@
 
   <section id="ut-section">
     <h2>Unidad Territorial</h2>
-    <label for="utSelect">Selecciona una UT:</label><br>
-    <select id="utSelect">
-      <option value="">-- Selecciona una opción --</option>
-    </select>
+    <div id="ut-controls">
+      <select id="utSelect">
+        <option value="">-- Selecciona una opción --</option>
+      </select>
+      <button id="zoomUtBtn" class="ut-zoom-btn" title="Ir a la UT seleccionada">
+        <i class="fa fa-crosshairs"></i>
+      </button>
+    </div>
+    <div id="presupuesto"></div>
   </section>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -105,9 +119,11 @@
       }
     }).addTo(map);
 
+    let unidadesGeojson;
     fetch('data/unidades.geojson')
       .then(res => res.json())
       .then(geojson => {
+        unidadesGeojson = geojson;
         const select = document.getElementById('utSelect');
 
         geojson.features.forEach(f => {
@@ -123,6 +139,15 @@
           if (feature) {
             utLayer.clearLayers();
             utLayer.addData(feature);
+            map.fitBounds(L.geoJSON(feature).getBounds());
+            document.getElementById('presupuesto').textContent = `Presupuesto asignado: ${feature.properties.monto_mone || '--'}`;
+          }
+        });
+
+        document.getElementById('zoomUtBtn').addEventListener('click', () => {
+          const clave = select.value;
+          const feature = geojson.features.find(f => f.properties.CVE_UT === clave);
+          if (feature) {
             map.fitBounds(L.geoJSON(feature).getBounds());
           }
         });
