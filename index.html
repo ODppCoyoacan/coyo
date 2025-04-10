@@ -6,6 +6,7 @@
   <title>Mapa Coyoacán</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.wms@1.0.0/leaflet.wms.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
   <style>
     html, body {
       margin: 0;
@@ -28,10 +29,13 @@
       width: 100%;
       max-width: 400px;
     }
-    .leaflet-control-home {
-      background-color: white;
-      padding: 5px;
+    .leaflet-control-home-btn {
+      background: white;
+      border: 2px solid #ccc;
+      border-radius: 4px;
+      padding: 5px 10px;
       cursor: pointer;
+      font-size: 18px;
     }
   </style>
 </head>
@@ -46,7 +50,20 @@
     </select>
   </section>
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+    // Cargar unidades territoriales
+    fetch('data/unidades.geojson')
+      .then(res => res.json())
+      .then(geojson => {
+        const select = document.getElementById('utSelect');
+        geojson.features.forEach(f => {
+          const option = document.createElement('option');
+          option.value = f.properties.CVE_UT;
+          option.textContent = `${f.properties.CVE_UT} - ${f.properties.NOMBRE}`;
+          select.appendChild(option);
+        });
+      });
+  </script>
   <script src="https://unpkg.com/leaflet.wms@1.0.0/leaflet.wms.js"></script>
   <script>
     let alcaldiaBounds;
@@ -87,18 +104,16 @@
         map.fitBounds(alcaldiaBounds);
         map.setMaxBounds(alcaldiaBounds);
 
-        // Botón home
-        const homeControl = L.Control.extend({
-          options: { position: 'topleft' },
-          onAdd: function () {
-            const btn = L.DomUtil.create('div', 'leaflet-control-home');
-            btn.title = 'Volver a la vista de Coyoacán';
-            btn.innerHTML = '🏠';
-            btn.onclick = () => map.fitBounds(alcaldiaBounds);
-            return btn;
-          }
-        });
-        map.addControl(new homeControl());
+        // Botón de home
+        const homeButton = L.control({ position: 'topleft' });
+        homeButton.onAdd = function () {
+          const div = L.DomUtil.create('div', 'leaflet-control-home-btn');
+          div.innerHTML = '<i class="fa fa-home"></i>';
+          div.title = 'Vista inicial';
+          div.onclick = () => map.fitBounds(alcaldiaBounds);
+          return div;
+        };
+        homeButton.addTo(map);
       });
   </script>
 </body>
