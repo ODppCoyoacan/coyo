@@ -52,9 +52,12 @@
 
   <section id="ut-section">
     <h2>Unidad Territorial</h2>
-    $1
-      <button id="openGmapsBtn" class="ut-zoom-btn" title="Abrir vista en Google Maps">
-        <i class="fa fa-map"></i>
+    <div id="ut-controls">
+      <select id="utSelect">
+        <option value="">-- Selecciona una opción --</option>
+      </select>
+      <button id="zoomUtBtn" class="ut-zoom-btn" title="Ir a la UT seleccionada">
+        <i class="fa fa-crosshairs"></i>
       </button>
     </div>
     <div id="presupuesto"></div>
@@ -109,10 +112,6 @@
             pointToLayer: (feature, latlng) => {
               if (label === "Inmueble catalogado") {
                 return L.circleMarker(latlng, { radius: 5, fillColor: 'red', color: '#000', weight: 1, fillOpacity: 0.8 });
-              }
-              if (label === "Mercado público") {
-                return L.circleMarker(latlng, { radius: 5, fillColor: 'yellow', color: '#000', weight: 1, fillOpacity: 0.9 });
-              });
               }
               return L.marker(latlng);
             },
@@ -192,15 +191,10 @@
           }
         });
 
-        $1
-
-        document.getElementById('openGmapsBtn').addEventListener('click', () => {
-          const center = map.getCenter();
-          const lat = center.lat.toFixed(6);
-          const lng = center.lng.toFixed(6);
-          const zoom = map.getZoom();
-          const gmapsUrl = `https://www.google.com/maps/@${lat},${lng},${zoom}z`;
-          window.open(gmapsUrl, '_blank');
+        document.getElementById('zoomUtBtn').addEventListener('click', () => {
+          const clave = select.value;
+          const feature = geojson.features.find(f => f.properties.CVE_UT === clave);
+          if (feature) map.fitBounds(L.geoJSON(feature).getBounds());
         });
       });
   </script>
